@@ -13,7 +13,7 @@ The train.py scipt is used to train a VAE with both the standard Gaussian and th
 
 | Argument | Purpose |
 |:------:|:-------:|
-| --testname | required, name of folder network is stored |
+| --test_name | required, name of folder network is stored |
 | --dataset | training dataset (you have to download) |
 | --loss | either l2 or cross_entropy |
 | --tilt | prior tilt (tau), None for standard VAE |
@@ -25,11 +25,11 @@ The train.py scipt is used to train a VAE with both the standard Gaussian and th
 | --images | saves image reconstructions and samples |
 
 ## Evaluation
-There are a total of 4 different scripts which test our method as well as three other competing methods. Using `--testname` will automatically load a trained network along with any information needed for evalution from the information.txt file. The OOD information saves to `results/testname/testtype/aucroc` and stores an ROC plot, histogram, numpy arrays of the OOD scores and a text file of the final AUCROC scores. The tilt.py file runs our method, complexity.py is for [Input Complexity](https://arxiv.org/abs/1909.11480), ratio.py is for [Likelihood Ratios](https://arxiv.org/abs/1906.02845) and regret.py is for [Likelihood Regret](https://arxiv.org/abs/2003.02977). Some useful arguments are shown in the table below.
+There are a total of 4 different scripts which test our method as well as three other competing methods. Using `--test_name` will automatically load a trained network along with any information needed for evalution from the information.txt file. The OOD information saves to `results/testname/testtype/aucroc` and stores an ROC plot, histogram, numpy arrays of the OOD scores and a text file of the final AUCROC scores. The tilt.py file runs our method, complexity.py is for [Input Complexity](https://arxiv.org/abs/1909.11480), ratio.py is for [Likelihood Ratios](https://arxiv.org/abs/1906.02845) and regret.py is for [Likelihood Regret](https://arxiv.org/abs/2003.02977). Some useful arguments are shown in the table below.
 
 | Argument | Purpose |
 |:------:|:-------:|
-| --testname | required, name of folder network is stored |
+| --test_name | required, name of folder network is stored |
 | --samples | number of OOD samples to test |
 | --k | number of images for the IWAE bound |
 | --ic_type | png or jp2, for input complexity |
