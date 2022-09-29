@@ -9,7 +9,7 @@ class Loss(nn.Module):
         if tilt != None:
             print('optimizing for min kld')
             self.mu_star = util.kld_min(tilt, nz)
-            print('mu_star: {:.3f}'.format(self.gamma))
+            print('mu_star: {:.3f}'.format(self.mu_star))
         else:
             self.mu_star = None
 
@@ -22,6 +22,7 @@ class Loss(nn.Module):
     def forward(self, x, x_out, mu, logvar, ood=False):
         # recon loss options
         if self.loss_type == 'l2':
+            #recon = torch.sum(torch.square(x - x_out), dim=(1,2,3))
             recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
             if not ood: # batch support for aucroc testing
                 recon = torch.mean(recon) 
