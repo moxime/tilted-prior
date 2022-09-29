@@ -1,6 +1,6 @@
 # Tilted Prior
 
-This code is for the Exponentially Tilted Gaussian Prior for Variational Autoencoders ICML submission.
+This code is for The Tilted Variational Autoencoder: Improving Out-of-Distribution Detection ICLR submission.
 Below is a visualization of a network latent space that was trained on the MNIST dataset. Each data point corresponds to a mu for a given image x. For this visualization dz=3 and tau =10. 
 
 <p align="center">
