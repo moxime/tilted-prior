@@ -39,7 +39,7 @@ if __name__=="__main__":
     parser.add_argument('--workers', type=int, default=4, help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
     parser.add_argument('--nz', type=int, default=10, help='size of the latent z vector')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=250, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
@@ -179,7 +179,7 @@ if __name__=="__main__":
             optimizer2.step()
 
 
-    # main training look
+    # main training loop
     recon_track, kld_track = [], [] # arrays for storing loss information
     for epoch in range(opt.epochs):
         recon_temp, kld_temp = [], [] # arrays for storing loss information
@@ -228,7 +228,7 @@ if __name__=="__main__":
         kld_track.append(np.mean(kld_temp))
 
         
-        if epoch%2 == 0 or epoch == opt.epochs-1:
+        if epoch == opt.epochs-1:
             # save models        
             torch.save(netE.state_dict(), os.path.join(save_path, 'encoder.pth'))
             torch.save(netD.state_dict(), os.path.join(save_path, 'decoder.pth'))
