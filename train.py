@@ -21,6 +21,8 @@ import util
 import model
 
 # for likelihood ratio
+
+
 def perturb(x, mu, device):
     b, c, h, w = x.size()
     mask = torch.rand(b, c, h, w) < mu
@@ -42,6 +44,8 @@ if __name__=="__main__":
     parser.add_argument('--epochs', type=int, default=250, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
+    parser.add_argument('--device', default='cuda')
+    
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--beta', type=float, default=1., help='beta for beta-vae')
 
@@ -70,7 +74,7 @@ if __name__=="__main__":
 
     # set device
     if torch.cuda.is_available():
-        device = 'cuda'
+        device = opt.device
         print('using gpu')
     else:
         device = 'cpu'

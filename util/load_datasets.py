@@ -125,21 +125,22 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         svhn_set = torchvision.datasets.SVHN(root=root, download=False, transform=transform)
         svhn_loader = data.DataLoader(svhn_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
-        lsun_set = torchvision.datasets.LSUN(root=root+'/lsun', classes='val', transform=lsun_transform)
+        """        lsun_set = torchvision.datasets.LSUN(root=root+'/lsun', classes='val', transform=lsun_transform)
         lsun_loader = data.DataLoader(lsun_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     
         celeba_set = CelebaDataset(txt_path=root+'/celeba/identity_CelebA.txt', img_dir=root+'/celeba/img_align_celeba/', transform=celeba_transform)
         celeba_loader = data.DataLoader(celeba_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        
         
         uniform_set = FakeData(path=root+'/fake/uniform_color32', transform=transform)
         uniform_loader = data.DataLoader(uniform_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         const_set = FakeData(path=root+'/fake/const_color32', transform=transform)
         const_loader = data.DataLoader(const_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-
+        """
         # not mnist
-        loader_names = ['cifar10', 'mnist', 'fmnist', 'svhn', 'lsun', 'celeba', 'noise', 'constant']
-        loaders = [cifar10_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader, celeba_loader, uniform_loader, const_loader]
+        loader_names = ['cifar10', 'mnist', 'fmnist', 'svhn']
+        loaders = [cifar10_loader, mnist_loader, fmnist_loader, svhn_loader] # uniform_loader, const_loader]
         im_shape = (32, 32, 3)
         return loaders, loader_names, im_shape
  
