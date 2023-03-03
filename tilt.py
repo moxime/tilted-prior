@@ -1,4 +1,4 @@
-from importlib.metadata import requires
+from importlib_metadata import requires
 import os, sys, argparse, util, model, torch
 import numpy as np
 import matplotlib
@@ -65,7 +65,7 @@ def show_latent(z_train, z_test, z_ood, j):
     #print(out.shape)
     #np.save('latent/z_{}'.format(j), out)
     plt.tight_layout()
-    plt.savefig('latent/img {}.pdf'.format(j))
+    # plt.savefig('latent/img {}.pdf'.format(j))
     plt.close()
 
 # main backprop loop
@@ -137,6 +137,7 @@ if __name__== "__main__":
     parser.add_argument('--batch_size', type=int, default=256, help='batch size')
     parser.add_argument('--workers', type=int, default=4, help='number of data loading workers')
     parser.add_argument('--aucroc', type=bool, default=True, help='boolean, run aucroc testing')
+    parser.add_argument('--device')
     
     opt = parser.parse_args()
 
@@ -144,7 +145,7 @@ if __name__== "__main__":
         raise ValueError('enter a load folder')
  
     cudnn.benchmark = True
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    device = opt.device if torch.cuda.is_available() else 'cpu'
     print(device)
     
     # information from test_name files
@@ -160,10 +161,10 @@ if __name__== "__main__":
 
     # load datasets
     loaders,loader_names,image_size = util.load_datasets(train_dataset, opt.dataroot,
-                                                batch_size=opt.batch_size, num_workers=4)    
+                                                         batch_size=opt.batch_size, num_workers=opt.workers)    
     train_loader = loaders[0] 
     test_loader = loaders[1] 
-    print(loader_names)
+    print(*loader_names)
 
     # loss function
     in_loss_fn = model.Loss(loss_type, tilt, nz) 
@@ -172,18 +173,18 @@ if __name__== "__main__":
     # make model, get state dict
     netE = model.Encoder(image_size, nz, tilt)
     netD = model.Decoder(image_size, nz, loss_type)
-    state_E = torch.load(os.path.join(load_path, 'encoder.pth'))
-    state_D = torch.load(os.path.join(load_path, 'decoder.pth'))
+    state_E = torch.load(os.path.join(load_path, 'encoder.pth'), map_location=device)
+    state_D = torch.load(os.path.join(load_path, 'decoder.pth'), map_location=device)
 
+    print('going', len(loaders))
     for n, ood_loader in enumerate(loaders):
         # load original params
         netE.load_state_dict(state_E)
         netD.load_state_dict(state_D)
         netE.to(device)
         netD.to(device)       
-        
-        if n <= 5: continue
-        print('testing dataset: {}'.format(loader_names[n]))
+        #        if n <= 3: continue
+        print('testing dataset: {} of len {}'.format(loader_names[n], len(ood_loader) * opt.batch_size))
 
         # main backprop loop
         # return upated network 
@@ -207,7 +208,7 @@ if __name__== "__main__":
                 x_out = netD(z)
                 recon, kld = in_loss_fn(x, x_out, mu, logvar, ood=True)
                 loss = (recon + kld).detach().cpu().numpy()
-
+                # print('*** x:', *x.shape, 'x_out:', *x_out.shape, 'loss', loss)
                 if i == 0: track = loss
                 else: track = np.concatenate((track, loss))
             all_track.append(track)
@@ -216,8 +217,11 @@ if __name__== "__main__":
         scores = np.concatenate((all_track[0], all_track[1]))
         labels = np.concatenate((np.ones_like(all_track[0]), np.zeros_like(all_track[1])))
         fpr, tpr, _ = metrics.roc_curve(labels, scores)
+        for t, f in zip(tpr, fpr):
+            if t > 0.95: break
+    
         auc = metrics.auc(fpr, tpr)
-        print('auc: ', auc)
+        print('auc: {:.1%} fpr@{:.1%}={:.1%}'.format(auc, t, f))
         print()
 
         #if opt.aucroc:

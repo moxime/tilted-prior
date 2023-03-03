@@ -1,2 +1,5 @@
 _cache_*
 __pycache__
+results
+datasets
+matplotlibrc

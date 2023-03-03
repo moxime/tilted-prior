@@ -187,6 +187,7 @@ if __name__=="__main__":
     recon_track, kld_track = [], [] # arrays for storing loss information
     for epoch in range(opt.epochs):
         recon_temp, kld_temp = [], [] # arrays for storing loss information
+        mse_temp = []
         for i, (x, _) in enumerate(dataloader):            
             x = x.to(device)
              
@@ -213,14 +214,16 @@ if __name__=="__main__":
 
             optimizer1.step()
             optimizer2.step()
-                       
+
+            mse = ((x ** 2).sum((1, 2, 3)) / ((x - x_out) ** 2).sum((1, 2, 3))).log10() * 10
             recon_temp.append(recon.mean().detach().item())
             kld_temp.append(kld.mean().detach().item())
-
+            mse_temp.append(mse.mean().detach().item())
+            
             # store and print info
             if not i % 100:
-                print('epoch:{} recon:{:.3f} kld:{:.3f}'.format(
-                        epoch, np.mean(recon_temp), np.mean(kld_temp)))
+                print('epoch:{} recon:{:.3f} kld:{:.3f} mse: {:.1f}dB'.format(
+                        epoch, np.mean(recon_temp), np.mean(kld_temp), np.mean(mse_temp)))
 
         # beta-annealing
         if opt.burn_in and opt.beta < 1 and (epoch+1)%10 == 0:
