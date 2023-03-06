@@ -16,14 +16,17 @@ class Loss(nn.Module):
         self.nz = nz
         self.ce_loss = nn.CrossEntropyLoss(reduction='none')
         self.loss_type = loss_type 
-        if loss_type != 'l2' and loss_type != 'cross_entropy':
-            raise ValueError('{} is not a valid loss type, choose either l2 or cross_entropy')
+        if not loss_type in ('mse', 'rmse', 'cross_entropy'):
+            raise ValueError('{} is not a valid loss type, choose either (r)mse or cross_entropy')
 
     def forward(self, x, x_out, mu, logvar, ood=False):
         # recon loss options
-        if self.loss_type == 'l2':
-            #recon = torch.sum(torch.square(x - x_out), dim=(1,2,3))
-            recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
+        if self.loss_type in ('mse', 'rmse'):
+            
+            # recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
+            recon = torch.sum(torch.square(x - x_out), dim=(1,2,3))
+            if loss == 'rmse':
+                recon = rrcon.sqrt()
             if not ood: # batch support for aucroc testing
                 recon = torch.mean(recon) 
         elif self.loss_type == 'cross_entropy':    

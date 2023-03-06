@@ -48,17 +48,18 @@ if __name__=="__main__":
     
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--beta', type=float, default=1., help='beta for beta-vae')
+    parser.add_argument('--mse', action='store_true', help='use mse in loss instead of rmse')
 
     parser.add_argument('--perturbed', type=bool, default=False, help='Whether to train on perturbed data, used for comparing with likelihood ratio by Ren et al.')
     parser.add_argument('--ratio', type=float, default=0.2, help='ratio for perturbation of data, see Ren et al.')
 
     parser.add_argument('--test_name', default=None)
     parser.add_argument('--dataset', default='fmnist', help='train dataset, either fmnist or cifar10')
-    parser.add_argument('--loss', default='l2', help='loss, either: cross_entropy or l2')
+    parser.add_argument('--loss', default='rmse', help='loss, either: cross_entropy or (r)mse')
     parser.add_argument('--tilt', default=None, help='tilt, if None: regular vae w learnable variance')
 
     parser.add_argument('--images', type=bool, default=True, help='boolean, sample images')
-    parser.add_argument('--burn_in', type=bool, default=False, help='train vae with reverse beta annealing and decoder burn in')
+    parser.add_argument('--burn_in', action='store_true', help='train vae with reverse beta annealing and decoder burn in')
 
     opt = parser.parse_args()
     save_path = os.path.join('results', opt.test_name)
@@ -131,7 +132,7 @@ if __name__=="__main__":
     nz = int(opt.nz)
     tilt = torch.tensor(float(opt.tilt)) if opt.tilt != None else None
 
-    loss_fn = model.Loss(opt.loss, tilt, nz)
+    loss_fn = model.Loss(opt.loss, tilt, nz, use_mse=opt.mse)
     max_grad_norm = 100
 
     # load network and loss function
@@ -163,7 +164,7 @@ if __name__=="__main__":
             z = torch.randn((x.shape[0], nz)).to(device)
             x_out = netD(z)
 
-            if opt.loss == 'l2':
+            if opt.loss.endsmwith('mse'):
                 recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
                 loss = torch.mean(recon)
             else: # else cross_entropy
@@ -227,9 +228,13 @@ if __name__=="__main__":
 
         # beta-annealing
         if opt.burn_in and opt.beta < 1 and (epoch+1)%10 == 0:
+            old_beta = opt.beta
             opt.beta *= 2
-        if opt.beta > 1:
-            opt.beta = 1
+            if opt.beta > 1:
+                opt.beta = 1
+            else:
+                print('beta: {:.2e} -> {:.2e}'.format(old_beta, opt.beta))
+
 
         recon_track.append(np.mean(recon_temp))
         kld_track.append(np.mean(kld_temp))

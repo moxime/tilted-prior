@@ -59,12 +59,12 @@ class Decoder(nn.Module):
         self.loss_type = loss_type 
 
         # for final convolutions factor
-        if loss_type == 'l2':
+        if loss_type.endswith('mse'):
             f = 1
         elif loss_type == 'cross_entropy':
             f = 256
         else:
-            raise ValueError('{} is not a valid loss funtion, choose either l2 or cross_entropy'. format(loss_type))
+            raise ValueError('{} is not a valid loss funtion, choose either mse, rmse, or cross_entropy'. format(loss_type))
 
         self.deconv = nn.Sequential( # nz
             nn.ConvTranspose2d(nz, 2*base, kernel_size=shape[0]//4, stride=1, padding=0),
@@ -86,7 +86,7 @@ class Decoder(nn.Module):
         x = x.reshape((x.shape[0], x.shape[1], 1, 1))
         
         x = self.deconv(x)
-        if self.loss_type == 'l2':
+        if self.loss_type.endsswith('mse'):
             return x
         else:
             x = x.view(-1, self.shape[2], 256, self.shape[0], self.shape[1])
