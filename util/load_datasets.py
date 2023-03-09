@@ -113,8 +113,11 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
                             transforms.Resize((32,32))]) 
 
         # datasets
-        cifar10_set = torchvision.datasets.CIFAR10(root=root, train=True, download=False, transform=transform)
-        cifar10_loader = data.DataLoader(cifar10_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        cifar10_trainset = torchvision.datasets.CIFAR10(root=root, train=True, download=False, transform=transform)
+        cifar10_train_loader = data.DataLoader(cifar10_trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+
+        cifar10_testset = torchvision.datasets.CIFAR10(root=root, train=False, download=False, transform=transform)
+        cifar10_test_loader = data.DataLoader(cifar10_testset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         mnist_set = torchvision.datasets.MNIST(root=root, train=True, download=False, transform=gray_transform)
         mnist_loader = data.DataLoader(mnist_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
@@ -139,8 +142,8 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         # not mnist
         # loader_names = ['cifar10', 'mnist', 'fmnist', 'svhn', 'lsun', 'celeba', 'noise', 'constant']
         # loaders = [cifar10_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader, celeba_loader, uniform_loader, const_loader]
-        loader_names = ['cifar10', 'mnist', 'fmnist', 'svhn', 'lsun']
-        loaders = [cifar10_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader] 
+        loader_names = ['cifar10 train', 'cifar10 test',  'mnist', 'fmnist', 'svhn', 'lsun']
+        loaders = [cifar10_train_loader, cifar10_test_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader] 
         im_shape = (32, 32, 3)
         return loaders, loader_names, im_shape
 

@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import util
 
 class Loss(nn.Module):
+
     def __init__(self, loss_type, tilt, nz):
         super(Loss, self).__init__()
         if tilt != None:
@@ -25,8 +26,8 @@ class Loss(nn.Module):
             
             # recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
             recon = torch.sum(torch.square(x - x_out), dim=(1,2,3))
-            if loss == 'rmse':
-                recon = rrcon.sqrt()
+            if self.loss_type == 'rmse':
+                recon = recon.sqrt()
             if not ood: # batch support for aucroc testing
                 recon = torch.mean(recon) 
         elif self.loss_type == 'cross_entropy':    

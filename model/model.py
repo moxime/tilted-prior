@@ -86,7 +86,7 @@ class Decoder(nn.Module):
         x = x.reshape((x.shape[0], x.shape[1], 1, 1))
         
         x = self.deconv(x)
-        if self.loss_type.endsswith('mse'):
+        if self.loss_type.endswith('mse'):
             return x
         else:
             x = x.view(-1, self.shape[2], 256, self.shape[0], self.shape[1])

@@ -177,6 +177,7 @@ if __name__== "__main__":
     state_D = torch.load(os.path.join(load_path, 'decoder.pth'), map_location=device)
 
     print('going', len(loaders))
+    img_dir = os.path.join(load_path, 'samples_from_ood_testing')
     for n, ood_loader in enumerate(loaders):
         # load original params
         netE.load_state_dict(state_E)

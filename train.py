@@ -48,7 +48,6 @@ if __name__=="__main__":
     
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--beta', type=float, default=1., help='beta for beta-vae')
-    parser.add_argument('--mse', action='store_true', help='use mse in loss instead of rmse')
 
     parser.add_argument('--perturbed', type=bool, default=False, help='Whether to train on perturbed data, used for comparing with likelihood ratio by Ren et al.')
     parser.add_argument('--ratio', type=float, default=0.2, help='ratio for perturbation of data, see Ren et al.')
@@ -60,6 +59,8 @@ if __name__=="__main__":
 
     parser.add_argument('--images', type=bool, default=True, help='boolean, sample images')
     parser.add_argument('--burn_in', action='store_true', help='train vae with reverse beta annealing and decoder burn in')
+
+    parser.add_argument('--show', action='store_true', help='show model ad quit')
 
     opt = parser.parse_args()
     save_path = os.path.join('results', opt.test_name)
@@ -132,7 +133,7 @@ if __name__=="__main__":
     nz = int(opt.nz)
     tilt = torch.tensor(float(opt.tilt)) if opt.tilt != None else None
 
-    loss_fn = model.Loss(opt.loss, tilt, nz, use_mse=opt.mse)
+    loss_fn = model.Loss(opt.loss, tilt, nz)
     max_grad_norm = 100
 
     # load network and loss function
@@ -143,7 +144,12 @@ if __name__=="__main__":
 
     netD = model.Decoder(image_size, nz, opt.loss)
     netD.apply(weights_init)
-    netD.to(device) 
+    netD.to(device)
+
+    if opt.show:
+        print(netE)
+        print(netD)
+        sys.exit(0)
 
     # setup optimizers 
     weight_decay = 3e-5
@@ -164,7 +170,7 @@ if __name__=="__main__":
             z = torch.randn((x.shape[0], nz)).to(device)
             x_out = netD(z)
 
-            if opt.loss.endsmwith('mse'):
+            if opt.loss.endswith('mse'):
                 recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
                 loss = torch.mean(recon)
             else: # else cross_entropy
