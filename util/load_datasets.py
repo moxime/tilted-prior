@@ -104,7 +104,7 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         # transformations
         g2c = Gray2Color()
         transform = transforms.Compose([transforms.ToTensor()])
-        gray_transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((32,32)), g2c])
+        gray_transform = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(), g2c])
         lsun_transform = transforms.Compose([transforms.ToTensor(),
                             transforms.CenterCrop((256,256)),
                             transforms.Resize((32,32))])
@@ -119,10 +119,10 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         cifar10_testset = torchvision.datasets.CIFAR10(root=root, train=False, download=False, transform=transform)
         cifar10_test_loader = data.DataLoader(cifar10_testset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
-        mnist_set = torchvision.datasets.MNIST(root=root, train=True, download=False, transform=gray_transform)
+        mnist_set = torchvision.datasets.MNIST(root=root, train=False, download=False, transform=gray_transform)
         mnist_loader = data.DataLoader(mnist_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         
-        fmnist_set = torchvision.datasets.FashionMNIST(root=root, train=True, download=False, transform=gray_transform)
+        fmnist_set = torchvision.datasets.FashionMNIST(root=root, train=False, download=False, transform=gray_transform)
         fmnist_loader = data.DataLoader(fmnist_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         svhn_set = torchvision.datasets.SVHN(root=root, download=False, transform=transform)

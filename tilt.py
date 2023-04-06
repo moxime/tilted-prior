@@ -167,6 +167,7 @@ if __name__== "__main__":
     print(*loader_names)
 
     # loss function
+    print('loss:', loss_type)
     in_loss_fn = model.Loss(loss_type, tilt, nz) 
     out_loss_fn = model.Loss(loss_type, opt.ood_tilt, nz) 
 
@@ -209,6 +210,7 @@ if __name__== "__main__":
                 x_out = netD(z)
                 recon, kld = in_loss_fn(x, x_out, mu, logvar, ood=True)
                 loss = (recon + kld).detach().cpu().numpy()
+                # print('loss {}: {:.2f} recon: {:2f} kl: {:.2f}'.format(['out', 'in'][n], loss.mean(), recon.mean(), kld.mean()))
                 # print('*** x:', *x.shape, 'x_out:', *x_out.shape, 'loss', loss)
                 if i == 0: track = loss
                 else: track = np.concatenate((track, loss))
