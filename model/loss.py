@@ -32,14 +32,16 @@ class Loss(nn.Module):
                 recon = torch.mean(recon) 
         elif self.loss_type == 'cross_entropy':    
             b = x.size(0)
-            target = Variable(x.data.view(-1) * 255).long()
-            out = x_out.contiguous().view(-1,256)
-            recon = self.ce_loss(out, target)
-            recon = torch.sum(recon) / b
-            if ood: # batch support for aucroc testing
-                print('not implimented yet')
-                import sys
-                sys.exit()
+            target = Variable(x.data  * 255).long()
+            out = x_out.permute(0, -1, -4, -3, -2)
+            recon = self.ce_loss(out, target).sum((-3, -2, -1))
+            if not ood:
+                recon = torch.sum(recon) / b
+            # else: # batch support for aucroc testing
+            #     print(*x.shape, *x_out.shape, *recon.shape)
+            #     print('not implimented yet')
+            #     import sys
+            #     sys.exit()
 
         # kld loss options
         if self.mu_star == None:
