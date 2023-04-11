@@ -222,7 +222,12 @@ if __name__=="__main__":
             optimizer1.step()
             optimizer2.step()
 
+            x_out = x_out.argmax(-1) / 256
             mse = ((x ** 2).sum((1, 2, 3)) / ((x - x_out) ** 2).sum((1, 2, 3))).log10() * 10
+            if not i % 100 and False:
+                print('*** x: {:.5}+/-{:.3}'.format(x.mean(), x.std()), *x.shape,
+                      'out: {:.5}+/-{:.3}'.format(x_out.mean(), x_out.std()),  *x_out.shape)
+                print('*** {:.3}'.format(mse.mean().detach().item()))
             recon_temp.append(recon.mean().detach().item())
             kld_temp.append(kld.mean().detach().item())
             mse_temp.append(mse.mean().detach().item())
