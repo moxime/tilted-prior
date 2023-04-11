@@ -30,12 +30,16 @@ class Loss(nn.Module):
                 recon = recon.sqrt()
             if not ood: # batch support for aucroc testing
                 recon = torch.mean(recon) 
-        elif self.loss_type == 'cross_entropy':    
-            b = x.size(0)
-            target = Variable(x.data  * 255).long()
-            out = x_out.permute(0, -1, -4, -3, -2)
-            recon = self.ce_loss(out, target).sum((-3, -2, -1))
-            if not ood:
+        elif self.loss_type == 'cross_entropy':
+            if ood:
+                out = x_out.argmax(-1) / 255
+                target = x / 255
+                recon = torch.sum(torch.square(target - out), dim=(1,2,3))
+            else:
+                b = x.size(0)
+                target = Variable(x.data.view(-1)  * 255).long()
+                out = x_out.view(-1, 256)
+                recon = self.ce_loss(out, target)
                 recon = torch.sum(recon) / b
             # else: # batch support for aucroc testing
             #     print(*x.shape, *x_out.shape, *recon.shape)
