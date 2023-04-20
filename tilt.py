@@ -166,7 +166,9 @@ if __name__ == "__main__":
     # information from test_name files
     load_path = os.path.join('results', opt.test_name)
     [train_dataset, loss_type, tilt, nz] = util.get_test_info(load_path)
-    tilt = torch.tensor(float(tilt)) if tilt else None
+    tilt = torch.tensor(float(tilt)) if tilt != None else None
+    if not tilt:
+        tilt = None
     print('Tilt is {}'.format(tilt))
     if tilt is None and opt.dist == 0 and opt.nest == 1:
         print('error: using tilt and dist = 0')
