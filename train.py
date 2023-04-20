@@ -30,10 +30,11 @@ def perturb(x, mu, device):
     noise = torch.FloatTensor(x.size()).random_(0, 256).to(device)
     x = 255*x
     perturbed_x = ((1 - mask)*x + mask*noise)/255.
-    
+
     return perturbed_x
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     cudnn.benchmark = True
 
     parser = argparse.ArgumentParser()
@@ -45,20 +46,23 @@ if __name__=="__main__":
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
     parser.add_argument('--device', default='cuda')
-    
+
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--beta', type=float, default=1., help='beta for beta-vae')
 
-    parser.add_argument('--perturbed', type=bool, default=False, help='Whether to train on perturbed data, used for comparing with likelihood ratio by Ren et al.')
+    parser.add_argument('--perturbed', type=bool, default=False,
+                        help='Whether to train on perturbed data, used for comparing with likelihood ratio by Ren et al.')
     parser.add_argument('--ratio', type=float, default=0.2, help='ratio for perturbation of data, see Ren et al.')
 
     parser.add_argument('--test_name', default=None)
     parser.add_argument('--dataset', default='fmnist', help='train dataset, either fmnist or cifar10')
-    parser.add_argument('--loss', default='rmse', help='loss, either: cross_entropy or (r)mse')
+    parser.add_argument('--loss', default='rmse',
+                        choices=['mse', 'rmse', 'cross_entropy'], help='loss, either: cross_entropy or (r)mse')
     parser.add_argument('--tilt', default=None, help='tilt, if None: regular vae w learnable variance')
 
     parser.add_argument('--images', type=bool, default=True, help='boolean, sample images')
-    parser.add_argument('--burn_in', action='store_true', help='train vae with reverse beta annealing and decoder burn in')
+    parser.add_argument('--burn_in', action='store_true',
+                        help='train vae with reverse beta annealing and decoder burn in')
 
     parser.add_argument('--show', action='store_true', help='show model ad quit')
 
@@ -67,12 +71,12 @@ if __name__=="__main__":
 
     if opt.test_name == None:
         raise ValueError('enter a test name')
-     
-    # set random seed 
+
+    # set random seed
     opt.manualSeed = random.randint(1, 10000)
     print("random seed: ", opt.manualSeed)
     random.seed(opt.manualSeed)
-    torch.manual_seed(opt.manualSeed) 
+    torch.manual_seed(opt.manualSeed)
 
     # set device
     if torch.cuda.is_available():
@@ -87,38 +91,38 @@ if __name__=="__main__":
     if opt.dataset == 'fmnist':
         print('using fmnist')
         image_size = [32, 32, 1]
-        dataset_fmnist_train = dset.FashionMNIST(root=opt.dataroot, train=True, download=True, transform=transforms.Compose([ 
-                                    transforms.ToTensor(),
-                                    transforms.Resize((image_size[0])),
-                                ]))
+        dataset_fmnist_train = dset.FashionMNIST(root=opt.dataroot, train=True, download=True, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((image_size[0])),
+        ]))
         dataloader = torch.utils.data.DataLoader(dataset_fmnist_train, batch_size=opt.batch_size,
-                                                shuffle=True, num_workers=int(opt.workers)) 
+                                                 shuffle=True, num_workers=int(opt.workers))
 
     elif opt.dataset == 'cifar10':
         print('using cifar10')
         image_size = [32, 32, 3]
-        dataset = dset.CIFAR10(root=opt.dataroot, download=True,train = True,
-                                transform=transforms.Compose([
-                                    transforms.Resize((image_size[0])),
-                                    transforms.ToTensor(),
-                                ]))
+        dataset = dset.CIFAR10(root=os.path.join(opt.dataroot, 'cifar10'), download=True, train=True,
+                               transform=transforms.Compose([
+                                   transforms.Resize((image_size[0])),
+                                   transforms.ToTensor(),
+                               ]))
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size,
-                                                shuffle=True, num_workers=int(opt.workers))
+                                                 shuffle=True, num_workers=int(opt.workers))
 
     elif opt.dataset == 'celeba':
         print('using celeba')
         image_size = [178, 178, 3]
         celeba_set = util.CelebaDataset(txt_path=opt.dataroot+'/celeba/identity_CelebA.txt',
-                                    img_dir=opt.dataroot+'/celeba/img_align_celeba/',
-                                    transform=transforms.Compose([
-                                        transforms.ToTensor(),
-                                        transforms.CenterCrop((176,176))]),
+                                        img_dir=opt.dataroot+'/celeba/img_align_celeba/',
+                                        transform=transforms.Compose([
+                                            transforms.ToTensor(),
+                                            transforms.CenterCrop((176, 176))]),
                                         train=True
-                                    ) 
+                                        )
 
-        dataloader = data.DataLoader(celeba_set, batch_size=opt.batch_size, 
-                                        shuffle=True, num_workers=int(opt.workers))
-        
+        dataloader = data.DataLoader(celeba_set, batch_size=opt.batch_size,
+                                     shuffle=True, num_workers=int(opt.workers))
+
     else:
         raise ValueError('{} is not a valid dataset to train on, choose fmnist or cifar10'.format(opt.dataset))
 
@@ -127,7 +131,7 @@ if __name__=="__main__":
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
             m.weight.data.normal_(0.0, 0.02)
-        
+
     # display data, convert to useable datatypes
     print('latent dims: {}, tilt: {}, burn in: {}'.format(opt.nz, opt.tilt, opt.burn_in))
     nz = int(opt.nz)
@@ -137,7 +141,7 @@ if __name__=="__main__":
     max_grad_norm = 100
 
     # load network and loss function
-    print('loading network')  
+    print('loading network')
     netE = model.Encoder(image_size, nz, loss_fn.mu_star)
     netE.apply(weights_init)
     netE.to(device)
@@ -151,11 +155,11 @@ if __name__=="__main__":
         print(netD)
         sys.exit(0)
 
-    # setup optimizers 
+    # setup optimizers
     weight_decay = 3e-5
     optimizer1 = optim.Adam(netE.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=weight_decay)
-    optimizer2 = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=weight_decay) 
-    
+    optimizer2 = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=weight_decay)
+
     # create file with training information
     util.info_file(opt)
 
@@ -171,12 +175,12 @@ if __name__=="__main__":
             x_out = netD(z)
 
             if opt.loss.endswith('mse'):
-                recon = torch.linalg.norm(x - x_out, dim=(1,2,3))
+                recon = torch.linalg.norm(x - x_out, dim=(1, 2, 3))
                 loss = torch.mean(recon)
-            else: # else cross_entropy
+            else:  # else cross_entropy
                 b = x.size(0)
                 target = Variable(x.data.view(-1) * 255).long()
-                out = x_out.contiguous().view(-1,256)
+                out = x_out.contiguous().view(-1, 256)
                 recon = F.cross_entropy(out, target, reduction='none')
                 loss = torch.sum(recon) / b
 
@@ -184,45 +188,45 @@ if __name__=="__main__":
             optimizer2.zero_grad()
 
             loss.backward()
-            for group in optimizer2.param_groups: # clip gradients
+            for group in optimizer2.param_groups:  # clip gradients
                 utils.clip_grad_norm_(group['params'], max_grad_norm, norm_type=2)
-            
+
             optimizer2.step()
 
-
     # main training loop
-    recon_track, kld_track = [], [] # arrays for storing loss information
+    recon_track, kld_track = [], []  # arrays for storing loss information
     for epoch in range(opt.epochs):
-        recon_temp, kld_temp = [], [] # arrays for storing loss information
+        recon_temp, kld_temp = [], []  # arrays for storing loss information
         mse_temp = []
-        for i, (x, _) in enumerate(dataloader):            
+        for i, (x, _) in enumerate(dataloader):
             x = x.to(device)
-             
+
             # for likelihood ratio
             if opt.perturbed:
                 x = perturb(x, opt.ratio, device)
 
-            # main network pass 
+            # main network pass
             z, mu, logvar = netE(x)
             x_out = netD(z)
-            
+
             recon, kld = loss_fn(x, x_out, mu, logvar)
             loss = recon + opt.beta * kld
-             
+
             # optimize
             optimizer1.zero_grad()
             optimizer2.zero_grad()
 
             loss.backward()
-            for group in optimizer1.param_groups: # clip gradients
+            for group in optimizer1.param_groups:  # clip gradients
                 utils.clip_grad_norm_(group['params'], max_grad_norm, norm_type=2)
-            for group in optimizer2.param_groups: # clip gradients
+            for group in optimizer2.param_groups:  # clip gradients
                 utils.clip_grad_norm_(group['params'], max_grad_norm, norm_type=2)
 
             optimizer1.step()
             optimizer2.step()
 
-            x_out = x_out.argmax(-1) / 256
+            if opt.loss == 'cross_entropy':
+                x_out = x_out.argmax(-1) / 256
             mse = ((x ** 2).sum((1, 2, 3)) / ((x - x_out) ** 2).sum((1, 2, 3))).log10() * 10
             if not i % 100 and False:
                 print('*** x: {:.5}+/-{:.3}'.format(x.mean(), x.std()), *x.shape,
@@ -231,14 +235,14 @@ if __name__=="__main__":
             recon_temp.append(recon.mean().detach().item())
             kld_temp.append(kld.mean().detach().item())
             mse_temp.append(mse.mean().detach().item())
-            
+
             # store and print info
             if not i % 100:
                 print('epoch:{} recon:{:.3f} kld:{:.3f} mse: {:.1f}dB'.format(
-                        epoch, np.mean(recon_temp), np.mean(kld_temp), np.mean(mse_temp)))
+                    epoch, np.mean(recon_temp), np.mean(kld_temp), np.mean(mse_temp)))
 
         # beta-annealing
-        if opt.burn_in and opt.beta < 1 and (epoch+1)%10 == 0:
+        if opt.burn_in and opt.beta < 1 and (epoch+1) % 10 == 0:
             old_beta = opt.beta
             opt.beta *= 2
             if opt.beta > 1:
@@ -246,24 +250,22 @@ if __name__=="__main__":
             else:
                 print('beta: {:.2e} -> {:.2e}'.format(old_beta, opt.beta))
 
-
         recon_track.append(np.mean(recon_temp))
         kld_track.append(np.mean(kld_temp))
 
-        
         if epoch == opt.epochs-1:
-            # save models        
+            # save models
             torch.save(netE.state_dict(), os.path.join(save_path, 'encoder.pth'))
             torch.save(netD.state_dict(), os.path.join(save_path, 'decoder.pth'))
 
             # save and plot loss data
-            util.loss_plot(save_path, recon_track, kld_track)  
+            util.loss_plot(save_path, recon_track, kld_track)
 
             # save sample images from training set and OOD
             if opt.images:
                 if opt.dataset != 'celeba':
                     loaders, names, _ = util.load_datasets(opt.dataset, opt.dataroot,
-                                                            batch_size=10, num_workers=4)
+                                                           batch_size=10, num_workers=4)
                 else:
                     loaders = [dataloader]
                     names = ['celeba']

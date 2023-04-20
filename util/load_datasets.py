@@ -11,6 +11,8 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 # custom dataloader for celeba
+
+
 class CelebaDataset(Dataset):
     def __init__(self, txt_path, img_dir, transform, train=False):
         df = pd.read_csv(txt_path, sep=" ", index_col=0)
@@ -25,7 +27,7 @@ class CelebaDataset(Dataset):
     def __getitem__(self, index):
         img = Image.open(os.path.join(self.img_dir,
                                       self.img_names[index]))
-        
+
         img = self.transform(img)
         label = self.y[index]
         return img, label
@@ -34,6 +36,8 @@ class CelebaDataset(Dataset):
         return self.len
 
 # custom dataloader for noise and constant data
+
+
 class FakeData(Dataset):
     def __init__(self, path, transform):
         self.path = path
@@ -41,23 +45,27 @@ class FakeData(Dataset):
 
     def __getitem__(self, index):
         img = np.load(os.path.join(self.path, "img {}.npy".format(index)),
-                      allow_pickle=True)        
+                      allow_pickle=True)
         img = self.transform(img)
         label = 0
         return img, label
 
     def __len__(self):
-        return 60000 # same size as mnist type dataset
+        return 60000  # same size as mnist type dataset
 
 # custom transforms
+
+
 class Gray2Color(object):
     def __call__(self, img):
-        img = torch.vstack((img, img, img)) 
-        return img # stack three channels  
+        img = torch.vstack((img, img, img))
+        return img  # stack three channels
+
 
 class Color2Gray(object):
     def __call__(self, img):
-        return torch.unsqueeze(img[0], axis=0) # take first channel of image
+        return torch.unsqueeze(img[0], axis=0)  # take first channel of image
+
 
 def load_datasets(dataset, root, batch_size, num_workers=2):
     # train datasets
@@ -70,7 +78,7 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         # transformations
         c2g = Color2Gray()
         transform = transforms.Compose([transforms.ToTensor()])
-        gray_transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((32,32))])
+        gray_transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((32, 32))])
         color_transform = transforms.Compose([transforms.ToTensor(), c2g])
 
         # datasets
@@ -96,7 +104,8 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         const_loader = data.DataLoader(const_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         loader_names = ['fmnist', 'mnist', 'cifar10', 'svhn', 'kmnist', 'noise', 'constant']
-        loaders = [fmnist_loader, mnist_loader, cifar10_loader, svhn_loader, kmnist_loader, uniform_loader, const_loader]
+        loaders = [fmnist_loader, mnist_loader, cifar10_loader,
+                   svhn_loader, kmnist_loader, uniform_loader, const_loader]
         image_size = [32, 32, 1]
         return loaders, loader_names, image_size
 
@@ -104,34 +113,39 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         # transformations
         g2c = Gray2Color()
         transform = transforms.Compose([transforms.ToTensor()])
-        gray_transform = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(), g2c])
+        gray_transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), g2c])
         lsun_transform = transforms.Compose([transforms.ToTensor(),
-                            transforms.CenterCrop((256,256)),
-                            transforms.Resize((32,32))])
+                                             transforms.CenterCrop((256, 256)),
+                                             transforms.Resize((32, 32))])
         celeba_transform = transforms.Compose([transforms.ToTensor(),
-                            transforms.CenterCrop((178,178)),
-                            transforms.Resize((32,32))]) 
+                                               transforms.CenterCrop((178, 178)),
+                                               transforms.Resize((32, 32))])
 
         # datasets
-        cifar10_trainset = torchvision.datasets.CIFAR10(root=root, train=True, download=False, transform=transform)
-        cifar10_train_loader = data.DataLoader(cifar10_trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        cifar10_trainset = torchvision.datasets.CIFAR10(root=os.path.join(
+            root, 'cifar10'), train=True, download=False, transform=transform)
+        cifar10_train_loader = data.DataLoader(
+            cifar10_trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
-        cifar10_testset = torchvision.datasets.CIFAR10(root=root, train=False, download=False, transform=transform)
-        cifar10_test_loader = data.DataLoader(cifar10_testset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        cifar10_testset = torchvision.datasets.CIFAR10(root=os.path.join(
+            root, 'cifar10'), train=False, download=False, transform=transform)
+        cifar10_test_loader = data.DataLoader(cifar10_testset, batch_size=batch_size,
+                                              shuffle=True, num_workers=num_workers)
 
         mnist_set = torchvision.datasets.MNIST(root=root, train=False, download=False, transform=gray_transform)
         mnist_loader = data.DataLoader(mnist_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-        
+
         fmnist_set = torchvision.datasets.FashionMNIST(root=root, train=False, download=False, transform=gray_transform)
         fmnist_loader = data.DataLoader(fmnist_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
-        svhn_set = torchvision.datasets.SVHN(root=root, download=False, transform=transform)
+        svhn_set = torchvision.datasets.SVHN(root=os.path.join(root, 'svhn'), download=False, transform=transform)
         svhn_loader = data.DataLoader(svhn_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         lsun_set = torchvision.datasets.LSUN(root=os.path.join(root, 'lsun'), classes='val', transform=lsun_transform)
-        lsun_loader = data.DataLoader(lsun_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, drop_last=True)
-    
-        # celeba_set = CelebaDataset(txt_path=root+'/celeba/identity_CelebA.txt', img_dir=root+'/celeba/img_align_celeba/', transform=celeba_transform)
+        lsun_loader = data.DataLoader(lsun_set, batch_size=batch_size, shuffle=False,
+                                      num_workers=num_workers, drop_last=True)
+
+        # celeba_set = CelebaDataset(txt_path=os.path.join(root, DATASETNAME+'/celeba/identity_CelebA.txt', img_dir=os.path.join(root, DATASETNAME+'/celeba/img_align_celeba/', transform=celeba_transform)
         # celeba_loader = data.DataLoader(celeba_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
         uniform_set = FakeData(path=root+'/fake/uniform_color32', transform=transform)
@@ -143,7 +157,6 @@ def load_datasets(dataset, root, batch_size, num_workers=2):
         # loader_names = ['cifar10', 'mnist', 'fmnist', 'svhn', 'lsun', 'celeba', 'noise', 'constant']
         # loaders = [cifar10_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader, celeba_loader, uniform_loader, const_loader]
         loader_names = ['cifar10 train', 'cifar10 test',  'mnist', 'fmnist', 'svhn', 'lsun']
-        loaders = [cifar10_train_loader, cifar10_test_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader] 
+        loaders = [cifar10_train_loader, cifar10_test_loader, mnist_loader, fmnist_loader, svhn_loader, lsun_loader]
         im_shape = (32, 32, 3)
         return loaders, loader_names, im_shape
-
