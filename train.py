@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', default='fmnist', help='train dataset, either fmnist or cifar10')
     parser.add_argument('--loss', default='rmse',
                         choices=['mse', 'rmse', 'cross_entropy'], help='loss, either: cross_entropy or (r)mse')
-    parser.add_argument('--tilt', default=None, help='tilt, if None: regular vae w learnable variance')
+    parser.add_argument('--tilt', default=0, type=float, help='tilt, if None: regular vae w learnable variance')
 
     parser.add_argument('--images', type=bool, default=True, help='boolean, sample images')
     parser.add_argument('--burn_in', action='store_true',
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     # display data, convert to useable datatypes
     print('latent dims: {}, tilt: {}, burn in: {}'.format(opt.nz, opt.tilt, opt.burn_in))
     nz = int(opt.nz)
-    tilt = torch.tensor(float(opt.tilt)) if opt.tilt != None else None
+    tilt = torch.tensor(float(opt.tilt)) if opt.tilt else None
 
     loss_fn = model.Loss(opt.loss, tilt, nz)
     max_grad_norm = 100
